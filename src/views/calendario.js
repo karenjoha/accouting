@@ -25,7 +25,7 @@ const Calendario = () => {
   const handleDateChange = (date) => {
     const fechaActual = new Date();
 
-    if (date >= fechaActual) {
+    if (date.getTime() >= fechaActual.getTime()) {
       setSelectedDate(date);
       setModalIsOpen(true);
       setEventoSeleccionado(null);
@@ -33,6 +33,40 @@ const Calendario = () => {
       alert('Por favor, selecciona una fecha igual o posterior a la fecha actual');
     }
   };
+
+  const guardarEvento = (eventoSeleccionado) => {
+    // Formatear la fecha al formato 'YYYY-MM-DD'
+    const formattedDate = eventoSeleccionado.fecha.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
+    const eventoFormateado = { ...eventoSeleccionado, fecha: formattedDate };
+  
+    console.log('Evento seleccionado para guardar:', eventoFormateado);
+  
+    fetch('http://localhost:5000/calendario', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventoFormateado),
+    })
+    .then(response => {
+      console.log('Respuesta del servidor:', response);
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Error al guardar el evento');
+      }
+    })
+    .then(data => {
+      console.log('Evento guardado en el servidor', data);
+      // Actualiza el estado de eventos solo después de que la solicitud al servidor sea exitosa
+      setEventos([...eventos, eventoFormateado]);
+    })
+    .catch(error => {
+      console.error('Error al guardar el evento en el servidor', error);
+    });
+  };
+  
+
 
   const agregarEvento = (nuevoEvento) => {
     if (nuevoEvento.trim() !== '') {
@@ -44,6 +78,9 @@ const Calendario = () => {
       } else {
         setEventos([...eventos, { fecha: selectedDate, evento: nuevoEvento.trim() }]);
       }
+
+      // Llama a guardarEvento para guardar el nuevo evento en la base de datos
+      guardarEvento({ fecha: selectedDate, evento: nuevoEvento.trim() });
 
       setModalIsOpen(false);
       setEventoSeleccionado(null);
@@ -65,10 +102,9 @@ const Calendario = () => {
   };
 
   return (
-    <div
-    className="calendario-container">
+    <div className="calendario-container">
       <div>
-      <button className='button-atras' onClick={() => navigate(-1)}>Volver</button>
+        <button className='button-atras' onClick={() => navigate(-1)}>Volver</button>
       </div>
       <div className="reminder-icon">
         <FaBell className="bell-icon" />
