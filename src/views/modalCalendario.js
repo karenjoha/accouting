@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
 import '../css/modal.css'
-// Define los estilos directamente en el archivo del componente
+
 
 
 const ModalCalendario = ({ isOpen, onClose, onGuardar }) => {
